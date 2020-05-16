@@ -1,0 +1,3 @@
+merge two use cases (annotation & prediction explorer)
+remove key 
+update licence
