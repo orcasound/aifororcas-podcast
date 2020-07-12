@@ -186,10 +186,18 @@ WorkflowBtns.prototype = {
         var my = this;
         this.nextBtn = $('<button>', {
             class: 'btn submit',
-            text: 'SUBMIT & LOAD NEXT RECORDING'
+            text: 'SUBMIT'
         });
         this.nextBtn.click(function () {
             $(my).trigger('submit-annotations');
+        });
+
+        this.refreshBtn = $('<button>', {
+            text: 'SKIP & REFRESH',
+            class: 'exit btn',
+        });
+        this.refreshBtn.click(function () {
+            $(my).trigger('refresh-session');
         });
 
         this.exitBtn = $('<button>', {
@@ -199,11 +207,13 @@ WorkflowBtns.prototype = {
         this.exitBtn.click(function () {
             window.location = my.exitUrl;
         });
+
     },
 
     // Append the next and exit elements to the the parent container
     update: function() {
         $('.submit_container').append(this.nextBtn);
+        $('.submit_container').append(this.refreshBtn);
         if (this.showExitBtn) {
             $('.submit_container').append(this.exitBtn);
         }

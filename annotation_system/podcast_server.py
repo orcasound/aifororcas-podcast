@@ -6,112 +6,122 @@ from flask import render_template
 # from flask_httpauth import HTTPBasicAuth
 # auth = HTTPBasicAuth()
 from azure.storage.blob import BlockBlobService
+import yaml
 import json
 import tempfile, random
-from collections import deque
+
 
 app = Flask(__name__, static_folder='./static', template_folder='./templates')
 
-# NOTE: this file is only for demonstration as you don't have blob account credentials 
-accountName = 'PLACEHOLDER'
-accountKey = 'PLACEHOLDER'
-getCallContainerName = 'orcasoundlabpreds'
-postCallContainerName = 'dummydata'
+# some convenience functions/classes
 
-toServe = set()
-served = set()
-written = set()
-blob_count = 0
+def dict_to_str(d):
+    """Pretty print contents of a dict, with fixed width as [KEY] : [VALUE]"""
+    return "\n".join(["{0: <25}: {1}".format(k,v) for k,v in d.items()])
+
+class YAMLConfig:
+    def __init__(self, yaml_file):
+        with open(yaml_file, 'r') as f: yaml_dict = yaml.load(f, Loader=yaml.BaseLoader)
+        for k, v in yaml_dict.items():
+            setattr(self, k, v)
+    
+    def __repr__(self):
+        return dict_to_str(self.__dict__)
 
 def ends_with_json(s):
-    if s.endswith('.json'):
-        return True
+    if s.endswith('.json'): return True
     return False
 
-def get_blob_json_listings(containerName):
-    block_blob_service = BlockBlobService(account_name=accountName,
-                                          account_key=accountKey)
+# core functions  
+
+def list_blob_sessionids(containerName):
+    """Returns available sessionids in a blob container by listing JSON files"""
+    block_blob_service = BlockBlobService(account_name=creds.blobaccount,
+                                          account_key=creds.blobaccountkey)
     generator = block_blob_service.list_blobs(containerName)
-    tmp_list = [x.name for x in generator]
+    # e.g. returns [11, 22] for available json files [11.json, 22.json]
+    return [ x.name.rsplit(".",1)[0] for x in generator if ends_with_json(x.name) ]
 
-    return set(filter(ends_with_json, tmp_list))
-
-def get_blob(file_name):
-    block_blob_service = BlockBlobService(account_name=accountName,
-                                          account_key=accountKey)
-    json_data = block_blob_service.get_blob_to_text(getCallContainerName, file_name)
+def get_session_json(sessionid):
+    file_name = "{}.json".format(sessionid)
+    """Retrieves a session JSON for annotation UI"""
+    block_blob_service = BlockBlobService(account_name=creds.blobaccount,
+                                          account_key=creds.blobaccountkey)
+    json_data = block_blob_service.get_blob_to_text(creds.getcontainer, file_name)
     return json_data.content
 
-def clear_globals():
-    global toServe
-    toServe = set()
-    global served
-    served = set()
-    global written
-    written = set()
-    global blob_count
-    blob_count = 0
+def get_unannotated_session():
+    """Find un-annotated sessions, pick one that not been served"""
+    # {sessionid: _, backend_state:{written: _, remaining: _} }
+    global backend_state
 
-def get_blob_data():
-    #Get listings from blob
-    #Pick one that has not been served
-    written, remaining = set(), set()
-
-    # scan blob container on every request
-    # randomly choose a candidate not already written to postCallContainer
-    written = get_blob_json_listings(postCallContainerName)
-    candidates = get_blob_json_listings(getCallContainerName)
+    # scan blob container on request
+    written = set(list_blob_sessionids(creds.postcontainer))
+    candidates = set(list_blob_sessionids(creds.getcontainer))
     remaining = list(candidates-written)
+    # update backend state
+    backend_state['written'] = len(written)
+    backend_state['remaining'] = len(remaining)
 
+    # choose candidate at random from those not already written to postcontainer  
     if len(remaining)==0:
         raise Exception('Finished! No more data to annotate')
     else:
-        chosen_file = random.choice(remaining)
-
-    return (chosen_file,get_blob(chosen_file)), (written,remaining)
-
+        sessionid = random.choice(remaining)
+    
+    return dict(sessionid=sessionid)
+    
 def write_blob_data(file_name, content):
+    global backend_state
     try:
-        block_blob_service = BlockBlobService(account_name=accountName,
-                                              account_key=accountKey)
-        block_blob_service.create_blob_from_text(postCallContainerName, file_name, content)
+        block_blob_service = BlockBlobService(account_name=creds.blobaccount,
+                                              account_key=creds.blobaccountkey)
+        block_blob_service.create_blob_from_text(creds.postcontainer, file_name, content)
         tmp = tempfile.NamedTemporaryFile()
-        block_blob_service.get_blob_to_stream(postCallContainerName, file_name, tmp)
+        block_blob_service.get_blob_to_stream(creds.postcontainer, file_name, tmp)
+        backend_state['written'] += 1
+        backend_state['remaining'] -= 1
         return 201
     except:
         return 400
 
+# api functions 
 
 @app.route('/')
 def index():
     """
-    The homepage makes two HTTP requests:
-    - GET to /load/session : fetch a new JSON containing predictions 
-    - POST to /submit/annotation : save passed JSON to blob location 
+    The front-end makes these HTTP requests:
+    - GET to /fetch/session: fetches an un-annotated sessionid
+    - GET to /load/session/sessionid : retrieves a particular JSON containing predictions 
+    - GET to Azure blob to retrieve wav file for playback & computing spectrogram 
+    - POST to /submit/session : save passed JSON to blob location 
     """
     return render_template('index.html')
 
-
-@app.route('/load/session', methods=['GET'])
-def load_session():
+@app.route('/fetch/session', methods=['GET'])
+def fetch_new_session():
     try:
         # state is maintained on the blob itself
-        # NOTE: there is a chance that concurrent requests are served the same file
-        (fn,content), (written,remaining) = get_blob_data()
-        json_content = json.loads(content)
-        # for debugging purposes
-        json_content["backend_state"] = {}
-        json_content["backend_state"]["written"] = len(written)
-        json_content["backend_state"]["remaining"] = len(remaining)
-        print("AFTER:","remaining",len(remaining),"written",len(written))
-
-        return json.dumps(json_content)
+        # HACK: if concurrent requests are served the same random file, annotation is overwritten  
+        response = get_unannotated_session()
+        return json.dumps(response)
     except Exception as e:
         print(e)
         abort(400)
 
+@app.route('/load/session/<sessionid>', methods=['GET'])
+def load_session(sessionid):
+    global backend_state
+    try:
+        response = json.loads(get_session_json(sessionid))
+        response["backend_state"] = backend_state
+        print("Served session:", sessionid)
+        return json.dumps(response)
+    except Exception as e:
+        print("Error in loading session:",e)
+        abort(400)
 
-@app.route('/submit/annotation', methods=['POST'])
+@app.route('/submit/session', methods=['POST'])
 def submit_annotation():
     # NOTE: there's a small chance the file may be overwritten
     # if with concurrent GET requests, the same session is served to different users
@@ -131,17 +141,22 @@ def submit_annotation():
         return jsonify({'task': fname}), 201
 
 
-if __name__ == '__main__':
-    """
-    Stateless application:
-    1. On a GET request, scan preds and annotations containers and randomly return one to annotate
-    # NOTE: there is a chance that concurrent requests are served the same file
-    2. On POST request, simply attempt to write to the annotations container
-    # NOTE: there is a chance that a file is overwritten due to concurrent GET requests
-    # assume that Azure Blob can handle concurrent write requests for the same file 
-    # most recently written version is kept
+"""
+Stateless application:
+1. On a GET request, scan preds and annotations containers and randomly return one to annotate
+# NOTE: there is a chance that concurrent requests are served the same file
+2. On POST request, simply attempt to write to the annotations container
+# NOTE: there is a chance that a file is overwritten due to concurrent GET requests
+# assume that Azure Blob can handle concurrent write requests for the same file 
+# most recently written version is kept
 
-    The earlier attempt to maintain state had bugs due to multithreading. See:
-    https://stackoverflow.com/questions/32815451/are-global-variables-thread-safe-in-flask-how-do-i-share-data-between-requests
-    """
-    app.run(debug=True, threaded=True)
+The earlier attempt to maintain state had bugs due to multithreading. See:
+https://stackoverflow.com/questions/32815451/are-global-variables-thread-safe-in-flask-how-do-i-share-data-between-requests
+"""
+# initialize app globals 
+
+# create credentials object from YAML file 
+creds = YAMLConfig("CREDS1.yaml") # NOTE: the file in the repo contains dummy data 
+# global variable maintained for the progress bar 
+backend_state = {}
+get_unannotated_session() # just to initialize backend_state  

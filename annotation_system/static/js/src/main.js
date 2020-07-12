@@ -20,6 +20,9 @@ function Annotator() {
     this.workflowBtns;
     this.currentTask;
     this.taskStartTime;
+    this.sessionid;
+    this.sessionProgress = {};
+
     // only automatically open instructions modal when first loaded
     this.instructionsViewed = false;
     // Boolean, true if currently sending http post request 
@@ -112,6 +115,7 @@ Annotator.prototype = {
     // Event Handler, if the user clicks submit annotations call submitAnnotations
     addWorkflowBtnEvents: function() {
         $(this.workflowBtns).on('submit-annotations', this.submitAnnotations.bind(this));
+        $(this.workflowBtns).on('refresh-session', this.fetchAndLoadSession.bind(this));
     },
 
     addEvents: function() {
@@ -147,28 +151,71 @@ Annotator.prototype = {
         // });
     },
 
-    // Update the interface with the next task's data
-    loadNextTask: function() {
+    setCurrentSessionId: function(){
         var my = this;
-        $.getJSON(dataUrl)
+        const currUrlParams = new URLSearchParams(location.search);
+        my.sessionid = currUrlParams.get('sessionid');
+    },
+
+    updateSessionProgress: function(stateData){
+        var my = this;
+        var pbar = document.getElementById("annotation_progress");
+        my.sessionProgress.written = stateData.backend_state.written;
+        my.sessionProgress.total = my.sessionProgress.written+stateData.backend_state.remaining;
+        my.sessionProgress.pctprogress = Math.floor(my.sessionProgress.written/my.sessionProgress.total*100);
+ 
+        pbar.setAttribute("aria-valuemax", my.sessionProgress.total);
+        pbar.setAttribute("aria-valuenow", my.sessionProgress.written);
+        pbar.style.width = my.sessionProgress.pctprogress+"%";
+        pbar.innerHTML = my.sessionProgress.written + '/' + my.sessionProgress.total; 
+    },
+
+    fetchAndLoadSession: function(){
+        var my = this;
+        $.getJSON(fetchUrl)
+        .done(function(data) {
+            console.log('Fetched a new session');
+            console.log(data);
+
+            // update url parameter
+            window.history.pushState(data.sessionid,'','?sessionid='+data.sessionid);
+            // update sessionid and session progress bar values  
+            my.setCurrentSessionId();
+            // load UI
+            my.loadSession();
+        })
+        .fail(function() {
+            alert('Error: Unable to fetch a new session');
+        });
+    },
+
+    loadSession: function(){
+        var my = this;
+        $.getJSON(dataUrl+'/'+my.sessionid)
         .done(function(data) {
             my.currentTask = data;
             console.log(data);
-            var pbar = document.getElementById("annotation_progress");
-            var written = data.backend_state.written;
-            var total = written+data.backend_state.remaining;
-            var pprogress = Math.floor(written/total*100);
-            console.log(total);
-            pbar.setAttribute("aria-valuemax", total);
-            pbar.setAttribute("aria-valuenow", written);
-            pbar.style.width = pprogress+"%";
-            pbar.innerHTML = written + '/' + total; 
+            my.updateSessionProgress(data);
             my.update();
         })
         .fail(function() {
             alert('Error: Unable to retrieve JSON from Azure blob storage');
-            loadNextTask();
+            fetchAndLoadSession();
         });
+    },
+
+    // Update the interface with the next task's data
+    loadFirstSession: function() {
+        var my = this;
+        my.setCurrentSessionId();
+
+        // Hitting the homepage URL directly
+        if(my.sessionid == null){
+            my.fetchAndLoadSession();
+        } else { // Hitting a URL with existing sessionid parameter
+            my.loadSession();
+        }
+
     },
 
     // Collect data about users annotations and submit it to the backend
@@ -180,6 +227,7 @@ Annotator.prototype = {
                 return;
             }
             this.sendingResponse = true;
+
             // Get data about the annotations the user has created
             // var content = {
             //     task_start_time: this.taskStartTime,
@@ -190,7 +238,6 @@ Annotator.prototype = {
             //     // List of actions the user took to play and pause the audio
             //     play_events: this.playBar.getEvents(),
             // };
-            
             var content = {
                 uri: this.currentTask.uri,
                 absolute_time: this.currentTask.absolute_time,
@@ -203,6 +250,7 @@ Annotator.prototype = {
     },
 
     // Make POST request, passing back the content data. On success load in the next task
+    // TODO@Akash: on POST fetch a new session, then load that session 
     post: function (content) {
         var my = this;
         console.log(content.uri);
@@ -213,11 +261,11 @@ Annotator.prototype = {
             data: JSON.stringify(content)
         })
         .done(function(data) {
-            my.loadNextTask();
+            my.fetchAndLoadSession();
         })
         .fail(function() {
             alert('Error: Unable to Submit Annotations');
-            my.loadNextTask();
+            my.fetchAndLoadSession();
         })
         .always(function() {
             // No longer sending response
@@ -228,9 +276,11 @@ Annotator.prototype = {
 };
 
 function main() {
+
     // Create all the components
     var annotator = new Annotator();
-    // Load the first audio annotation task
-    annotator.loadNextTask();
+
+    annotator.loadFirstSession();
 }
+
 main();
