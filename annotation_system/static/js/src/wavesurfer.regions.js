@@ -37,6 +37,7 @@ WaveSurfer.Regions = {
     /* Add a region. */
     add: function (params) {
         var region = Object.create(WaveSurfer.Region);
+        params.minLength = 1.5;
         region.init(params, this.wavesurfer);
 
         this.list[region.id] = region;

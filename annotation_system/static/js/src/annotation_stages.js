@@ -1015,7 +1015,8 @@ AnnotationReveal.prototype = {
                 {
                     start: annotation.start_time_s,
                     end: endTime,
-                    color: 'hsla(100, 100%, 30%, 0.1)'
+                    color: 'hsla(100, 100%, 30%, 0.1)',
+                    annotation: annotation.confidence.toFixed(1)
                 });
         }
     },

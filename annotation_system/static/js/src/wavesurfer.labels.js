@@ -206,7 +206,7 @@ WaveSurfer.Label = {
             backgroundColor: '#7C7C7C',
             color: '#ffffff',
             padding: '0px 5px',
-            borderRadius: '2px',
+            borderRadius: '4px',
             fontSize: '12px',
             textTransform: 'uppercase',
             textOverflow: 'ellipsis',
