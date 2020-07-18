@@ -959,8 +959,8 @@ AnnotationReveal.prototype = {
         if (this.currentRegion) {
             this.currentRegion.update({drag: false, resize: false});
             // $(this.currentRegion.element).removeClass('current_region');
-            $(this.currentRegion.annotationLabel.element).removeClass('current_label');
-            $(this.currentRegion.annotationLabel.element).addClass('old_label');
+            // $(this.currentRegion.annotationLabel.element).removeClass('current_label');
+            // $(this.currentRegion.annotationLabel.element).addClass('old_label');
 
             // // Remove the highlated label and disable.
             // $('.annotation_tag', this.dom).removeClass('selected');
@@ -993,8 +993,8 @@ AnnotationReveal.prototype = {
                 // Also remove the highlight of the label and region border
                 this.currentRegion.update({drag: false, resize: false});
                 // $(this.currentRegion.element).removeClass('current_region');
-                $(this.currentRegion.annotationLabel.element).removeClass('current_label');
-                $(this.currentRegion.annotationLabel.element).addClass('old_label');
+                // $(this.currentRegion.annotationLabel.element).removeClass('current_label');
+                // $(this.currentRegion.annotationLabel.element).addClass('old_label');
 
                 // // Remove the highlated label and disable.
                 // $('.annotation_tag', this.dom).removeClass('selected');
