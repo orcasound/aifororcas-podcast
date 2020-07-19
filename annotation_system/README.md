@@ -1,21 +1,37 @@
 # Pod.Cast annotation system 
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/orcasound/orcalabel-podcast/blob/master/LICENSE)
+
 ## Overview 
 
 This is a prototype flask-based web-app to label unlabelled Orcasound data in live conditions, while viewing predictions from a model. 
 
-As seen below, this has been used in an active learning style, where an initial model (when tuned for high recall) filters out candidates from unlabelled Orcasound archives that are then refined by human listeners. Each round generates new labelled data that improves models trained on this data, making them more robust to varied acoustic conditions at different hydrophone nodes. Held-out test sets are also created in a similar fashion as accuracy and robustness benchmarks. 
+<img src="doc/podcast-screenshot.png" alt="Screenshot of Pod.Cast annotation UI" width="80%">
 
-<!-- ![Flowchart of feedback loop between model & human listeners](./doc/podcast-activelearning-flowchart.png) -->
+- Each page/session gets a unique URL (via the `sessionid` URL param), that you can use to share if you find something interesting 
+- Refer to the instructions on the page for how to edit model predictions or create annotations 
+- The progress bar tracks the current "round" of unlabelled sessions for whom annotations have been submitted  
+- If you aren't sure, or want to see a new one, `skip & refresh` loads a new (un-annotated) session without submitting anything 
 
-<img src="doc/podcast-activelearning-flowchart.png" width="70%">
+## Data Creation
+
+This tool has been used in an active learning style to create & release new training & test sets at [orcadata/wiki](https://github.com/orcasound/orcadata/wiki/Pod.Cast-data-archive). 
+
+- To do so, we process 2-3hr windows of unlabelled Orcasound archives where likely activity has been reported & upload them to the Pod.Cast tool:
+    - Audio is split into 1-minute sessions that are easy to view 
+    - Sessions to be labelled are chosen which contain positive predictions from ML model (tuned for high recall, so as to not miss anything)  
+    - Sessions to be used as negative examples are also selected by choosing those with no predictions (tuned with a very low confidence threshold, so mistakes are very unlikely) 
+- Each round generates new labelled data that improves models trained on this data, making them more robust to varied acoustic conditions at different hydrophone nodes. 
+- Held-out test sets have also created in a similar fashion as accuracy and robustness benchmarks. 
+
+<img src="doc/podcast-activelearning-flowchart.png" alt="Flowchart of feedback loop between model & human listeners" width="70%">
 
 ## Architecture  
 
 This prototype is a [single page application](https://en.wikipedia.org/wiki/Single-page_application#JavaScript_frameworks) with a simple flask backend that interfaces with Azure blob storage. 
 For simplicity/ease of access, this version doubles up use of blob storage as a *sort of database*. A JSON file acts as a single entry, and separate containers as *sort of tables/collections* (this hack should eventually be fixed with a  database). 
 
-<img src="doc/podcast-arch-diagram.png" width="100%">
+<img src="doc/podcast-arch-diagram.png" alt="Architecture diagram showing API interactions between frontend, backend & blob storage" width="100%">
 
 The API consists of the following: 
 
@@ -31,28 +47,30 @@ Fetches the corresponding JSON file from the blob container.
 
 > POST /submit/session
 
+Schema of JSON entries 
 
-
+Cite wavesurfer and audio-annotator 
 
 # Use & setup  
 
 ## Setup & local debugging  
 
-Create an isolate python environment, and `pip install --upgrade pip && pip install -r requirements.txt`. 
-(Python 3.6.8 has been tested, though more recent versions should also work as dependencies are quite simple)
+1. Create an isolated python environment, and `pip install --upgrade pip && pip install -r requirements.txt`. 
+(Python 3.6.8 has been tested, though recent versions should likely work as dependencies are quite simple)
 
-Set the environment variable `FLASK_APP=podcast_server.py`. 
+2. The `CREDS.yaml` specifies how the backend authenticates with blob storage & the specific container names to use. The provided file is a template and should be replaced: 
+    * If you would like to test with an ongoing Pod.Cast round, ask for the credentials on the [Orcasound slack](https://join.slack.com/t/orcasound/shared_invite/zt-bd1jk2q9-FjeWr3OzocDBwDgS0g1FdQ)
+    * If you are using your own blob account, make sure you have 3 containers: `[1]` *.wav audio files (~1min duration - as each file forms one page/session) `[2]: getcontainer` model predictions specified in JSON format @ [ADDEXAMPLEFILE1] corresponding to each *.wav file `[3]: postcontainer` destination for user-submitted annotations in JSON format @ [ADDEXAMPLEFILE2] 
 
-Then, from this directory start the server with `python -m flask run`, and browse to the link in the terminal (e.g. `http://127.0.0.1:5000/`) in your browser (Edge and Chrome are tested). 
+2. Set the environment variable `FLASK_APP=podcast_server.py` and `FLASK_ENV=development`. Then, from this directory start the server with `python -m flask run`, and browse to the link in the terminal (e.g. `http://127.0.0.1:5000/`) in your browser (Edge and Chrome are tested). 
 
-> Note that when you run this locally, you will still be writing to the actual blob storage, so be careful. 
+> Note that when you run this locally, you will still be connecting & writing to the actual blob storage specified in `CREDS.yaml` so be careful. 
 
-For a modification of this code, to make it easier to explore/debug model predictions on some local wav files, see `prediction_explorer`. 
+3. For a modification of this code, to make it easier to explore/debug model predictions on some local wav files, see `prediction_explorer`. 
 
 
-## Next up 
+## References 
 
-If you submit, do make sure you do your diligence with the annotations as we haven't setup any user differentiation yet :) 
-A heads up, you might find this process quite addicting as there's always newer sessions that are loaded! 
+This code uses a fork of [audio-annotator](https://github.com/CrowdCurio/audio-annotator) for the frontend code. audio-annotator uses [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js) for rendering/playing audio. Please refer to respective references for more info on the core functions/classes used in this repo.
+*(Note: the wavesurfer.js version used here is older than the current docs).*
 
-We plan to hook this up to recent streams from OrcaSound, to both get a sense of the classifier's performance and help improve it in live conditions. If you want to try a different classifier, for now,  let us know. Eventually we're hoping to make it easier to try your own. 
