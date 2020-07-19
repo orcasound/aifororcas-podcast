@@ -11,9 +11,9 @@ This is a prototype flask-based web-app to label unlabelled Orcasound data in li
 - Each page/session gets a unique URL (via the `sessionid` URL param), that you can use to share if you find something interesting 
 - Refer to the instructions on the page for how to edit model predictions or create annotations 
 - The progress bar tracks the current "round" of unlabelled sessions for whom annotations have been submitted  
-- If you aren't sure, or want to see a new one, `skip & refresh` loads a new (un-annotated) session without submitting anything 
+- If you aren't sure, or want to see a new one, `skip & refresh` loads a random (un-annotated) session without submitting anything 
 
-## Data Creation
+## Dataset Creation
 
 This tool has been used in an active learning style to create & release new training & test sets at [orcadata/wiki](https://github.com/orcasound/orcadata/wiki/Pod.Cast-data-archive). 
 
@@ -29,7 +29,7 @@ This tool has been used in an active learning style to create & release new trai
 ## Architecture  
 
 This prototype is a [single page application](https://en.wikipedia.org/wiki/Single-page_application#JavaScript_frameworks) with a simple flask backend that interfaces with Azure blob storage. 
-For simplicity/ease of access, this version doubles up use of blob storage as a *sort of database*. A JSON file acts as a single entry, and separate containers as *sort of tables/collections* (this hack should eventually be fixed with a  database). 
+For simplicity/ease of access, this version doubles up use of blob storage as a *sort of database*. A JSON file acts as a single entry, and separate containers as *sort of tables/collections* *(for now for this hack makes it easy to do quick-and-dirty viewing/editing in [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/), or any equivalent blob viewer for S3 etc.).* 
 
 <img src="doc/podcast-arch-diagram.png" alt="Architecture diagram showing API interactions between frontend, backend & blob storage" width="100%">
 
