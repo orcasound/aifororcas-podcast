@@ -4,7 +4,7 @@
 
 ## Overview 
 
-This is a prototype flask-based web-app to label unlabelled Orcasound data in live conditions, while viewing predictions from a model. 
+This is a prototype flask-based web-app to label unlabelled bioacoustic recordings, while viewing predictions from a model. This is useful to setup some quick-and-dirty labelling or exploration, that doesn't need any advanced features such as automated model inference, user access roles, interfacing with other backends, gamification etc.  
 
 <img src="doc/podcast-screenshot.png" alt="Screenshot of Pod.Cast annotation UI" width="80%">
 
@@ -28,7 +28,7 @@ This tool has been used in an active learning style to create & release new trai
 
 ## Architecture  
 
-This prototype is a [single page application](https://en.wikipedia.org/wiki/Single-page_application#JavaScript_frameworks) with a simple flask backend that interfaces with Azure blob storage. 
+This prototype is a [single page application](https://love2dev.com/blog/5-single-page-app-best-practices/) with a simple flask backend that interfaces with Azure blob storage. 
 For simplicity/ease of access, this version doubles up use of blob storage as a *sort of database*. A JSON file acts as a single entry, and separate containers as *sort of tables/collections* *(for now for this hack makes it easy to do quick-and-dirty viewing/editing in [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/), or any equivalent blob viewer for S3 etc.).* 
 
 <img src="doc/podcast-arch-diagram.png" alt="Architecture diagram showing API interactions between frontend, backend & blob storage" width="100%">
@@ -58,15 +58,15 @@ Cite wavesurfer and audio-annotator
 1. Create an isolated python environment, and `pip install --upgrade pip && pip install -r requirements.txt`. 
 (Python 3.6.8 has been tested, though recent versions should likely work as dependencies are quite simple)
 
-2. The `CREDS.yaml` specifies how the backend authenticates with blob storage & the specific container names to use. The provided file is a template and should be replaced: 
+2. Set the environment variable `FLASK_APP=podcast_server.py` and `FLASK_ENV=development`. If you haven't made your own CREDS file yet, see #3. Once that's done from this directory start the server with `python -m flask run`, and browse to the link in the terminal (e.g. `http://127.0.0.1:5000/`) in your browser (Edge and Chrome are tested). 
+
+3. The `CREDS.yaml` specifies how the backend authenticates with blob storage & the specific container names to use. The provided file is a template and should be replaced: 
     * If you would like to test with an ongoing Pod.Cast round, ask for the credentials on the [Orcasound slack](https://join.slack.com/t/orcasound/shared_invite/zt-bd1jk2q9-FjeWr3OzocDBwDgS0g1FdQ)
     * If you are using your own blob account, make sure you have 3 containers: `[1]` *.wav audio files (~1min duration - as each file forms one page/session) `[2]: getcontainer` model predictions specified in JSON format @ [ADDEXAMPLEFILE1] corresponding to each *.wav file `[3]: postcontainer` destination for user-submitted annotations in JSON format @ [ADDEXAMPLEFILE2] 
 
-2. Set the environment variable `FLASK_APP=podcast_server.py` and `FLASK_ENV=development`. Then, from this directory start the server with `python -m flask run`, and browse to the link in the terminal (e.g. `http://127.0.0.1:5000/`) in your browser (Edge and Chrome are tested). 
-
 > Note that when you run this locally, you will still be connecting & writing to the actual blob storage specified in `CREDS.yaml` so be careful. 
 
-3. For a modification of this code, to make it easier to explore/debug model predictions on some local wav files, see `prediction_explorer`. 
+4. For a modification of this code, to make it easier to explore/debug model predictions on some local wav files, see `prediction_explorer`. 
 
 
 ## References 
