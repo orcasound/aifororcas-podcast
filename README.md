@@ -14,7 +14,7 @@
 
 - Each page/session gets a unique URL (via the `sessionid` URL param), that you can use to share if you find something interesting 
 - Refer to the instructions on the page for how to edit model predictions or create annotations 
-- The progress bar tracks the current "round" of unlabelled sessions for whom annotations have been submitted  
+- The progress bar tracks the current "round" of unlabelled sessions for which annotations have been submitted  
 - If you aren't sure, or want to see a new one, `skip & refresh` loads a random (un-annotated) session without submitting anything 
 
 ## Dataset Creation
