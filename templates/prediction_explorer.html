@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pod.Cast | Help listen for Orcas!</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/materialize.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/audio-annotator.css">
+    <link rel="stylesheet" href="/static/css/bootstrap-iso.css">
+
+    <script type="text/javascript" src="/static/js/lib/jquery-2.2.3.min.js"></script>
+    <script type="text/javascript" src="/static/js/lib/materialize.min.js"></script>
+    <script type="text/javascript" src="/static/js/lib/wavesurfer.min.js"></script>
+    <script type="text/javascript" src="/static/js/lib/wavesurfer.spectrogram.min.js"></script>
+    <script type="text/javascript" src="/static/js/colormap/colormap.min.js"></script>
+
+    <script type="text/javascript" src="/static/js/src/message.js"></script>
+    <script type="text/javascript" src="/static/js/src/wavesurfer.regions.js"></script>
+    <script type="text/javascript" src="/static/js/src/wavesurfer.drawer.extended.js"></script>
+    <script type="text/javascript" src="/static/js/src/wavesurfer.labels.js"></script>
+    <script type="text/javascript" src="/static/js/src/hidden_image.js"></script>
+    <script type="text/javascript" src="/static/js/src/components-pred_explorer.js"></script>
+    <script type="text/javascript" src="/static/js/src/annotation_stages.js"></script>
+    <script type="text/javascript" src="/static/js/src/main.js" defer></script>
+</head>
+<body>
+    <div class="annotation">
+        <div class="labels"></div>
+        <div class="audio_visual"></div>
+        <!-- <div class="creation_stage_container"></div> -->
+    </div> 
+    <div class="container">
+      <div class="row" style="margin-top: 4%">
+        <div class="col l3 s12">
+          <div class="play_bar"></div>
+        </div>
+        <div class="col l3 offset-l1 s12">
+          <div class="bootstrap-iso">
+            <div class="progress">
+              <!-- This is a bit hacky, a bit hestitant to dive into the full CSS :) -->
+              <div id="annotation_progress" class="progress-bar" role="progressbar" style="width:5%; background-image:linear-gradient(#98337f, #98337f)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col l4 offset-l1 s12">
+          <div class="submit_container"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+        var fetchUrl = '/fetch/session';
+        var dataUrl = '/load/session';
+        var postUrl = '/next';
+    </script>   
+</body>
+<footer class="page-footer purple darken-4">
+          <div class="container">
+            <div class="row">
+              <div class="col l7 s12">
+                <h4 class="orange-text">Pod.Cast | Prediction Explorer</h4>
+                <blockquote>
+                    <p class="grey-text text-lighten-4">The progress bar indicates the total number of wav files and the "sessionid" URL param indicates the one you are viewing. You can use the button to go next, or directly edit the number in the URL to jump someplace else. Check flask logs for corresponding wav_filename for each sessionid that's loaded.</p>
+                </blockquote>
+              </div>
+              <div class="col l4 offset-l1 s12">
+                <div class="card blue-grey darken-1">
+                  <div class="card-content white-text">
+                    <span class="card-title">Debug tool</span>
+                    <p>You are viewing annotations for the recordings specified in the TSV file.</p>
+                  </div>
+                  <div class="card-action">
+                    <a href="https://www.orcasound.net/portfolio/orcasound-lab-hydrophone" target="_blank">Orcasound Lab Hydrophone</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="footer-copyright">
+            <div class="container"> Developed in collaboration with Orcasound at <a class="orange-text" href="https://twitter.com/msftgarage?lang=en">MS Hack 2019</a>. Best experienced on Chrome/Edge Desktop. <a class="orange-text" href="https://github.com/orcasound" target="_blank">Orcasound on Github</a>
+            <div/>
+          </div>
+</footer>
+</html>
