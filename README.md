@@ -85,5 +85,5 @@ Primary logic is defined in [main.js](static/js/src/main.js).
 This code uses a fork of [audio-annotator](https://github.com/CrowdCurio/audio-annotator) for the frontend code. audio-annotator uses [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js) for rendering/playing audio. Please refer to respective references for more info on the core functions/classes used in this repo.
 *(Note: the wavesurfer.js version used here is older than the current docs).*
 
-Icons used were made by [Prosymbols](https://www.flaticon.com/authors/prosymbols) from [www.flaticon.com](http://www.flaticon.com/). 
+Icons used in readme flowcharts were made by [Prosymbols](https://www.flaticon.com/authors/prosymbols) from [www.flaticon.com](http://www.flaticon.com/). 
 
