@@ -7,9 +7,17 @@ TODOS are at this Trello card https://trello.com/c/ZBo4CO9r
 * make new annotations have a min length 
 * add a requirements.txt 
 * disable the confusing double new/old_label function 
-- clean up README for annotation_system
-- cost out time to unify annotation_system and prediction_explorer 
-- update licence
+* clean up README for annotation_system
+* add example JSON files & update README 
+* unify annotation_system and prediction_explorer 
+    * create separate tmp static directory for files 
+    * modify logic for fetch/load API 
+        (backend is tracking what number what served)
+        * rename json files to sessionid number 
+        * /fetch/session returns 1 for first time, else +1 of last one served 
+        * /load/session/<idx> loads that JSON 
+        * change skip & refresh button to next 
+* update licence
 
 
 Backlog: 
