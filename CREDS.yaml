@@ -2,3 +2,4 @@ blobaccount: PLACEHOLDER
 blobaccountkey: PLACEHOLDER
 getcontainer: PREDICTIONS 
 postcontainer: ANNOTATIONS
+audiocontainer: AUDIOSEGMENTS

@@ -8,7 +8,7 @@
 
 `podcast_server.py` is a prototype flask-based web-app to label unlabelled bioacoustic recordings, while viewing predictions from a model. This is useful to setup some quick-and-dirty labelling sessions that don't need any advanced features such as automated model inference, user access roles, interfacing with other backends, gamification etc.  
 
-(also included is a tool to quickly view & browse model predictions. See [prediction-explorer](README_prediction-explorer.md))
+(See [prediction-explorer](README_prediction-explorer.md) for a related tool to quickly visualize & browse model predictions on a set of audio files. This runs locally)
 
 <img src="doc/podcast-screenshot.png" alt="Screenshot of Pod.Cast annotation UI" width="80%">
 
@@ -73,11 +73,47 @@ Primary logic is defined in [main.js](static/js/src/main.js).
 
 3. The `CREDS.yaml` specifies how the backend authenticates with blob storage & the specific container names to use. The provided file is a template and should be replaced: 
     * If you would like to test with an ongoing Pod.Cast round, ask for the credentials on the [Orcasound slack](https://join.slack.com/t/orcasound/shared_invite/zt-bd1jk2q9-FjeWr3OzocDBwDgS0g1FdQ)
-    * If you are using your own blob account, make sure you have 3 containers: `[1]` *.wav audio files (~1min duration - as each file forms one page/session) `[2]: getcontainer` model predictions specified in JSON format @ [ADDEXAMPLEFILE1] corresponding to each *.wav file `[3]: postcontainer` destination for user-submitted annotations in JSON format @ [ADDEXAMPLEFILE2] 
+    * If you are using your own blob account, see section [Using your own blob storage](#using-your-own-blob-storage)
 
 > Note that when you run this locally, you will still be connecting & writing to the actual blob storage specified in `CREDS.yaml` so be careful. 
 
-4. For a modification of this code, to make it easier to explore/debug model predictions on some local wav files, see `prediction_explorer`. 
+## Using your own blob storage
+
+This assumes you have already created an Azure Storage account & know how to view & access it using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/). 
+
+1. Enable a [CORS rule](https://www.dougv.com/2016/08/serving-static-files-azure-storage-cors-rules/) to the account. In short, setting this allows a browser client to directly make a request to the blob storage to retrieve a *.wav file. 
+
+<img src="doc/az-blob-configure-cors.png" alt="Screenshot of Azure Storage explorer showing CORS permissions" width="35%">
+
+2. Make sure you have 3 containers; `[1]: audiocontainer` *.wav audio files (~1min duration - as each file forms one page/session) `[2]: getcontainer` model predictions specified in JSON format [example-load.json](doc/example-load.json) corresponding to each *.wav file `[3]: postcontainer` destination for user-submitted annotations in JSON format [example-submit.json](doc/example-submit.json). 
+
+3. Enable public read-only access to blobs in `audiocontainer` (select the "blobs" option). Along with #1, this is required for the browser to directly retrieve *.wav files. 
+
+<img src="doc/az-blob-configure-public.png" alt="Screenshot of Azure Storage explorer to set public access level" width="25%">
+
+## Deployment to Azure App Service
+
+Prerequsite: [Install Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
+
+1. Authenticate and setup your local environment to be using the right subscription 
+
+```
+az login 
+az account list --output table 
+az account set --subscription SUBSCRIPTIONID
+```
+
+2. In the root directory of your application, create a deployment config file at `.azure/config`. This contains details about your resource group, appservice plan to use, etc. (An example file is at [.azure/config](/.azure/config))
+
+3. Now run the following commands to deploy the app. The first command packages up your local directory into a *.zip for deployment and deploys the app on Azure. If an app with the same name in the deployment config file exists it will update it, else create a new app. The second command is to only be run the first time, to register the entry point of the app. (see note below)
+
+```
+az webapp up --sku B1 --dryrun
+az webapp config set -g mldev -n aifororcas-podcast --startup-file "gunicorn --bind=0.0.0.0 --timeout 600 podcast_server:app"
+```
+
+> This deployment example is loosely based on the [Quickstart](https://docs.microsoft.com/en-us/azure/app-service/containers/quickstart-python?tabs=bash). We make a change to the [startup command](https://docs.microsoft.com/en-us/azure/app-service/containers/how-to-configure-python#customize-startup-command) to register the different name of our app file `podcast_server.py`. 
+> (FYI some more details about the CLI commands used here are at: [az-webapp-up](https://docs.microsoft.com/en-us/cli/azure/webapp?view=azure-cli-latest#az-webapp-up), [configuring-python-app](https://docs.microsoft.com/en-us/azure/app-service/containers/how-to-configure-python))
 
 
 ## References 
