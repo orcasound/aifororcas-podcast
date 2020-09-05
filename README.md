@@ -41,19 +41,19 @@ For simplicity/ease of access, this version doubles up use of blob storage as a 
 
 > GET /fetch/session
 
-Scans the `getcontainer` blob for an unlabelled session, randomly picks & returns a `{sessionid=X}` response. The sessionid is simply the name of the corresponding X.JSON file on the blob.   
+Scans the `getcontainer` blob for an unlabelled session, randomly picks & returns a `{sessionid=X}` response. The sessionid is simply the name of the corresponding X.JSON file on the blob. Updates/resets internal global variable `backend_state` that contains info for the progress bar.  
 
 > GET /load/session/sessionid
 >
 > GET Azure blob wav
 
 Fetches the corresponding JSON file from the `getcontainer` blob. (For an example, see [example-load.json](doc/example-load.json))
-
-`backend_state` is used to populate the progress bar, and the client loads audio pointed at `uri` directly from the blob storage.   
+JSON file contains `backend_state` for the progress bar, and `uri` that points the client directly to the corresponding audio file on the blob storage.   
 
 > POST /submit/session
 
-Writes a JSON to the `postcontainer` blob. (For an example, see [example-submit.json](doc/example-submit.json), it has the same schema)
+Writes a JSON to the `postcontainer` blob. (For an example, see [example-submit.json](doc/example-submit.json), it has the same schema).
+Also updates internal global variable `backend_state` that contains info for the progress bar.
 
 **Client logic:**
 

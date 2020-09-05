@@ -140,6 +140,8 @@ Annotator.prototype = {
                     my.annotatortool.displayRegions(my.currentTask.annotations);
             });
 
+
+
         };
 
         // $.getJSON(this.currentTask.annotationSolutionsUrl)
@@ -164,15 +166,21 @@ Annotator.prototype = {
         my.sessionProgress.total = my.sessionProgress.written+stateData.backend_state.remaining;
         my.sessionProgress.pctprogress = Math.floor(my.sessionProgress.written/my.sessionProgress.total*100);
  
+        // update progress bar HTML
         pbar.setAttribute("aria-valuemax", my.sessionProgress.total);
         pbar.setAttribute("aria-valuenow", my.sessionProgress.written);
         pbar.style.width = my.sessionProgress.pctprogress+"%";
         pbar.innerHTML = my.sessionProgress.written + '/' + my.sessionProgress.total; 
+
+        // disable submit button if session is completed
+        if(my.sessionProgress.written == my.sessionProgress.total){
+            my.workflowBtns.showNextBtn = false;
+        }
     },
 
     fetchAndLoadSession: function(){
         var my = this;
-        $.getJSON(fetchUrl)
+        $.getJSON(fetchUrl + location.pathname)
         .done(function(data) {
             console.log('Fetched a new session');
             console.log(data);
@@ -191,12 +199,13 @@ Annotator.prototype = {
 
     loadSession: function(){
         var my = this;
-        $.getJSON(dataUrl+'/'+my.sessionid)
+        $.getJSON(dataUrl + location.pathname + '/'+ my.sessionid)
         .done(function(data) {
             my.currentTask = data;
             console.log(data);
             my.updateSessionProgress(data);
             my.update();
+
         })
         .fail(function() {
             alert('Error: Unable to retrieve JSON from Azure blob storage');
@@ -256,7 +265,7 @@ Annotator.prototype = {
         console.log(content.uri);
         $.ajax({
             type: 'POST',
-            url: postUrl,
+            url: postUrl + location.pathname + '/' + my.sessionid,
             contentType: 'application/json',
             data: JSON.stringify(content)
         })

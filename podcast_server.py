@@ -1,7 +1,7 @@
 #!flask/bin/python
 from flask import Flask, jsonify
 from flask import abort
-from flask import request
+from flask import request, redirect
 from flask import render_template
 # from flask_httpauth import HTTPBasicAuth
 # auth = HTTPBasicAuth()
@@ -43,22 +43,26 @@ def list_blob_sessionids(containerName):
     # e.g. returns [11, 22] for available json files [11.json, 22.json]
     return [ x.name.rsplit(".",1)[0] for x in generator if ends_with_json(x.name) ]
 
-def get_session_json(sessionid):
+def get_session_json(roundid, sessionid):
     file_name = "{}.json".format(sessionid)
     """Retrieves a session JSON for annotation UI"""
+    getcontainer = "{}-{}".format(creds.getcontainer, roundid)
     block_blob_service = BlockBlobService(account_name=creds.blobaccount,
                                           account_key=creds.blobaccountkey)
-    json_data = block_blob_service.get_blob_to_text(creds.getcontainer, file_name)
+    json_data = block_blob_service.get_blob_to_text(getcontainer, file_name)
     return json_data.content
 
-def get_unannotated_session():
+def get_unannotated_session(roundid):
     """Find un-annotated sessions, pick one that not been served"""
     # {sessionid: _, backend_state:{written: _, remaining: _} }
     global backend_state
 
+    getcontainer = "{}-{}".format(creds.getcontainer, roundid)
+    postcontainer = "{}-{}".format(creds.postcontainer, roundid)
+
     # scan blob container on request
-    written = set(list_blob_sessionids(creds.postcontainer))
-    candidates = set(list_blob_sessionids(creds.getcontainer))
+    written = set(list_blob_sessionids(postcontainer))
+    candidates = set(list_blob_sessionids(getcontainer))
     remaining = list(candidates-written)
     # update backend state
     backend_state['written'] = len(written)
@@ -66,20 +70,22 @@ def get_unannotated_session():
 
     # choose candidate at random from those not already written to postcontainer  
     if len(remaining)==0:
-        raise Exception('Finished! No more data to annotate')
+        print('Finished! No more data to annotate, choosing any session at random.')
+        sessionid = random.choice(list(candidates))
     else:
         sessionid = random.choice(remaining)
     
     return dict(sessionid=sessionid)
     
-def write_blob_data(file_name, content):
+def write_blob_data(roundid, file_name, content):
     global backend_state
+    postcontainer = "{}-{}".format(creds.postcontainer, roundid)
     try:
         block_blob_service = BlockBlobService(account_name=creds.blobaccount,
                                               account_key=creds.blobaccountkey)
-        block_blob_service.create_blob_from_text(creds.postcontainer, file_name, content)
+        block_blob_service.create_blob_from_text(postcontainer, file_name, content)
         tmp = tempfile.NamedTemporaryFile()
-        block_blob_service.get_blob_to_stream(creds.postcontainer, file_name, tmp)
+        block_blob_service.get_blob_to_stream(postcontainer, file_name, tmp)
         backend_state['written'] += 1
         backend_state['remaining'] -= 1
         return 201
@@ -97,6 +103,11 @@ def index():
     - GET to Azure blob to retrieve wav file for playback & computing spectrogram 
     - POST to /submit/session : save passed JSON to blob location 
     """
+    return redirect("round4", code=303)
+
+@app.route('/<roundid>')
+def index_with_roundid(roundid):
+    # simply dummy as all logic is in the client
     return render_template('index.html')
 
 @app.route('/fetch/session', methods=['GET'])
@@ -110,20 +121,31 @@ def fetch_new_session():
         print(e)
         abort(400)
 
-@app.route('/load/session/<sessionid>', methods=['GET'])
-def load_session(sessionid):
+@app.route('/fetch/session/<roundid>', methods=['GET'])
+def fetch_new_session_with_roundid(roundid):
+    try:
+        # state is maintained on the blob itself
+        # HACK: if concurrent requests are served the same random file, annotation is overwritten  
+        response = get_unannotated_session(roundid)
+        return json.dumps(response)
+    except Exception as e:
+        print(e)
+        abort(400)
+
+@app.route('/load/session/<roundid>/<sessionid>', methods=['GET'])
+def load_session(roundid, sessionid):
     global backend_state
     try:
-        response = json.loads(get_session_json(sessionid))
+        response = json.loads(get_session_json(roundid, sessionid))
         response["backend_state"] = backend_state
-        print("Served session:", sessionid)
+        print("Served round: {}, session: {}".format(roundid, sessionid))
         return json.dumps(response)
     except Exception as e:
         print("Error in loading session:",e)
         abort(400)
 
-@app.route('/submit/session', methods=['POST'])
-def submit_annotation():
+@app.route('/submit/session/<roundid>/<sessionid>', methods=['POST'])
+def submit_annotation(roundid, sessionid):
     # NOTE: there's a small chance the file may be overwritten
     # if with concurrent GET requests, the same session is served to different users
     # most recently written version is kept
@@ -131,10 +153,10 @@ def submit_annotation():
 
     if not request.json:
         abort(400)
-    uri = request.json.get('uri')
-    val = uri.split('/')[-1].split('.')[0]
-    fname = val + '.json'
-    status = write_blob_data(fname, json.dumps(request.json))
+    # uri = request.json.get('uri')
+    # val = uri.split('/')[-1].split('.')[0]
+    fname = sessionid + '.json'
+    status = write_blob_data(roundid, fname, json.dumps(request.json))
 
     if status >= 300:
         abort(500)
@@ -160,4 +182,4 @@ https://stackoverflow.com/questions/32815451/are-global-variables-thread-safe-in
 creds = YAMLConfig(CREDS_FILE) # NOTE: the file in the repo contains dummy data 
 # global variable maintained for the progress bar 
 backend_state = {}
-get_unannotated_session() # just to initialize backend_state  
+get_unannotated_session("round4") # just to initialize backend_state  
