@@ -9,7 +9,7 @@ TODOS are at this Trello card https://trello.com/c/ZBo4CO9r
 * disable the confusing double new/old_label function 
 * clean up README for annotation_system
 * add example JSON files & update README 
-* unify annotation_system and prediction_explorer 
+* unify annotation_system and prediction_explorer static folders [only separate flask apps]
     * create separate tmp static directory for files 
     * modify logic for fetch/load API 
         (backend is tracking what number what served)
@@ -18,12 +18,13 @@ TODOS are at this Trello card https://trello.com/c/ZBo4CO9r
         * /load/session/<idx> loads that JSON 
         * change skip & refresh button to next 
 * update licence
+* support multiple "Rounds" via the URL e.g. basename/round/?sessionid=X
 
 
 Backlog: 
 
-- support multiple "Rounds" via the URL e.g. basename/round/?sessionid=X
-- merge static folder for two use cases (annotation & prediction explorer) [only separate flask entry points]
+- load the "Now playing" text from some default YAML file 
+- control default / redirect also from same YAML file 
 - loading spinner https://codepen.io/yic666kr/pen/mxmvbV?__cf_chl_jschl_tk__=3555085104393da3384101d04359a2807f88a01f-1591725010-0-AeSCVSgStNRhdDgsCL2Xjhj4D2bZ_zpe5rqyoWA_HLj80q26yLLjz2bYe1vBWmyn0XS6iHsgy5voFUx84HG3SBqABjTgoLAseHrxh3BBKmbgaZs9zAISu5FqBo8ZF3pQZx-CWfc8ORF7Fnxb2qx4sDti6AN1BxkwjFYKeM3QicfRs18ji7GhzJCRaX9OAW3__1Cc_eFUdU1Ol5h4w5qn3rIfGEH6Q6c9u9lFvL26X9AyI9BwlVjE7JL8RI1qKNtJYWByF28IkMEhWujbWnigG5tApHqeyZJBju84Xh2Uxh9xLhN9qjrMlrV5_BVDi00ZxR8o-qYfd-JvvVnyiyNlvLSNGJqIlDqQABWCcIlgETAl 
 
 
@@ -35,3 +36,33 @@ https://javascript.info/
 Single page application architecture 
 https://love2dev.com/blog/5-single-page-app-best-practices/
 https://en.wikipedia.org/wiki/Single-page_application#JavaScript_frameworks
+
+
+Change for supporting multiple "Rounds":
+
+audiosegments
+    round3
+    round4
+predictions-round3
+annotations-round3
+predictions-round4
+predictions-round4
+
+handle edge case:
+*   / (redirect to default:round4)
+
+fetch: 
+*   does set difference of predictions, annotations (change to use roundid appropriate container name, handle / case)
+
+load: 
+*   loads sessionid.json from predictions container (change to use appropriate container name)
+
+submit:
+*   writes sessionid.json to annotations container (change to use appropriate container name)
+
+skip:
+*   call fetchAndLoadSession
+
+client:
+*   loadSession (change to parse /round from url)
+*   fetchAndLoadSession (change to parse /round from url)

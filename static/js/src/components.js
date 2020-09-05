@@ -178,6 +178,8 @@ function WorkflowBtns(exitUrl) {
 
     // Boolean that determined if the exit button is shown
     this.showExitBtn = false;
+    // Boolean to determine if submit button is shown 
+    this.showNextBtn = true;
 }
 
 WorkflowBtns.prototype = {
@@ -212,7 +214,10 @@ WorkflowBtns.prototype = {
 
     // Append the next and exit elements to the the parent container
     update: function() {
-        $('.submit_container').append(this.nextBtn);
+        if (this.showNextBtn) {
+            $('.submit_container').append(this.nextBtn);
+        }
+        // $('.submit_container').append(this.nextBtn);
         $('.submit_container').append(this.refreshBtn);
         if (this.showExitBtn) {
             $('.submit_container').append(this.exitBtn);
@@ -222,5 +227,10 @@ WorkflowBtns.prototype = {
     // Set the value of showExitBtn
     setExitBtnFlag: function(showExitBtn) {
         this.showExitBtn = showExitBtn;
+    },
+
+    // Set the value of showExitBtn
+    setNextBtnFlag: function(showNextBtn) {
+        this.showNextBtn = showNextBtn;
     }
 };
