@@ -21,10 +21,11 @@
 
 This tool has been used in an active learning style to create & release new training & test sets at [orcadata/wiki](https://github.com/orcasound/orcadata/wiki/Pod.Cast-data-archive). 
 
-- To do so, we process 2-3hr windows of unlabelled Orcasound archives where likely activity has been reported & upload them to the Pod.Cast tool:
-    - Audio is split into 1-minute sessions that are easy to view 
-    - Sessions to be labelled are chosen which contain positive predictions from ML model (tuned for high recall, so as to not miss anything)  
-    - Sessions to be used as negative examples are also selected by choosing those with no predictions (tuned with a very low confidence threshold, so mistakes are very unlikely) 
+- To do so, a candidate 2-3hr window is identified, with likely activity (reported by sighting networks / Orcasound listeners). Data is processed from Orcasound's S3 archives as follows:
+    - Format conversion (HLS -> concatenated wav file)
+    - Audio is split into 1-minute easily browsable "sessions"  
+    - Data to use for labelling/training is prioritized as follows:
+        - Candidates are selected for labelling using predictions from an ML model, using a mid-low threshold (tuned for high recall). This helps discard data & prioritize labelling effort. 
 - Each round generates new labelled data that improves models trained on this data, making them more robust to varied acoustic conditions at different hydrophone nodes. 
 - Held-out test sets have also created in a similar fashion as accuracy and robustness benchmarks. 
 
@@ -39,18 +40,18 @@ For simplicity/ease of access, this version doubles up use of blob storage as a 
 
 **Backend API:**
 
-> GET /fetch/session
+> GET /fetch/session/roundid
 
 Scans the `getcontainer` blob for an unlabelled session, randomly picks & returns a `{sessionid=X}` response. The sessionid is simply the name of the corresponding X.JSON file on the blob. Updates/resets internal global variable `backend_state` that contains info for the progress bar.  
 
-> GET /load/session/sessionid
+> GET /load/session/roundid/sessionid
 >
 > GET Azure blob wav
 
 Fetches the corresponding JSON file from the `getcontainer` blob. (For an example, see [example-load.json](doc/example-load.json))
 JSON file contains `backend_state` for the progress bar, and `uri` that points the client directly to the corresponding audio file on the blob storage.   
 
-> POST /submit/session
+> POST /submit/session/roundid/sessionid
 
 Writes a JSON to the `postcontainer` blob. (For an example, see [example-submit.json](doc/example-submit.json), it has the same schema).
 Also updates internal global variable `backend_state` that contains info for the progress bar.
