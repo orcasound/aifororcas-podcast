@@ -978,14 +978,28 @@ AnnotationReveal.prototype = {
         var arrayLength = candidateAnnotations.length;
         for (var i = 0; i < arrayLength; i++) {
             var annotation = candidateAnnotations[i];
-            var endTime = annotation.start_time_s + annotation.duration_s;
-            this.wavesurfer.addRegion(
-                {
-                    start: annotation.start_time_s,
-                    end: endTime,
-                    color: 'hsla(100, 100%, 30%, 0.1)',
-                    annotation: annotation.confidence.toFixed(1)
-                });
+            var start_s = null
+            var duration_s = null
+            if (annotation.start_s != null) { start_s = annotation.start_s }
+            if (annotation.start_time_s != null) { start_s = annotation.start_time_s }
+            if (annotation.duration_s != null) { duration_s = annotation.duration_s }
+            var endTime = start_s + duration_s;
+            if (annotation.confidence == null) {
+                this.wavesurfer.addRegion(
+                    {
+                        start: start_s,
+                        end: endTime,
+                        color: 'hsla(100, 100%, 30%, 0.1)'
+                    });
+            } else {
+                this.wavesurfer.addRegion(
+                    {
+                        start: start_s,
+                        end: endTime,
+                        color: 'hsla(100, 100%, 30%, 0.1)',
+                        annotation: annotation.confidence.toFixed(1)
+                    });
+            };
         }
     },
 
