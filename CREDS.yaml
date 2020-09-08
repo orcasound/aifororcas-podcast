@@ -3,3 +3,4 @@ blobaccountkey: PLACEHOLDER
 getcontainer: PREDICTIONS 
 postcontainer: ANNOTATIONS
 audiocontainer: AUDIOSEGMENTS
+roundsinfoconfig: CONTAINER/FILENAME

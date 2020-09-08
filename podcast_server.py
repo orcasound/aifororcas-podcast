@@ -6,6 +6,7 @@ from flask import render_template
 # from flask_httpauth import HTTPBasicAuth
 # auth = HTTPBasicAuth()
 from azure.storage.blob import BlockBlobService
+from pathlib import Path
 import yaml
 import json
 import tempfile, random
@@ -42,6 +43,28 @@ def list_blob_sessionids(containerName):
     generator = block_blob_service.list_blobs(containerName)
     # e.g. returns [11, 22] for available json files [11.json, 22.json]
     return [ x.name.rsplit(".",1)[0] for x in generator if ends_with_json(x.name) ]
+
+def get_round_info(roundid):
+    """
+    Loads info about the current round to populate the 'Now Playing' card. This is 
+    specified as a YAML file on blob storage for easy edits/updates without needing to 
+    redeploy the backend app.
+    """
+    # download YAML file from blob storage
+    container = Path(creds.roundsinfoconfig).parent 
+    file_name = Path(creds.roundsinfoconfig).name 
+    block_blob_service = BlockBlobService(account_name=creds.blobaccount,
+                                          account_key=creds.blobaccountkey)
+    text_data = block_blob_service.get_blob_to_text(container, file_name).content
+    rounds_yaml = yaml.load(text_data, Loader=yaml.BaseLoader)
+    # assert expected structure 
+    assert all( k in rounds_yaml for k in ['round_info', 'hydrophone_info'] )
+    # use a default if this round info has not yet been updated 
+    round_info = rounds_yaml['round_info'].get(roundid)
+    if round_info is None:
+        round_info = rounds_yaml['round_info'].get('default')
+    hydrophone_info = rounds_yaml['hydrophone_info'].get(round_info['hydrophone_id'])
+    return round_info, hydrophone_info
 
 def get_session_json(roundid, sessionid):
     file_name = "{}.json".format(sessionid)
@@ -107,8 +130,13 @@ def index():
 
 @app.route('/<roundid>')
 def index_with_roundid(roundid):
+    # pull YAML file from blob with round info
+    round_info, hydrophone_info = get_round_info(roundid)
     # simply dummy as all logic is in the client
-    return render_template('index.html')
+    return render_template('index.html', 
+                            description=round_info['text'],
+                            url_display=hydrophone_info['display_name'],
+                            url=hydrophone_info['url'])
 
 @app.route('/fetch/session', methods=['GET'])
 def fetch_new_session():
