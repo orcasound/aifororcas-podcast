@@ -1,0 +1,43 @@
+current_round: round4
+
+round_info: # This is used to populate the 'Now Playing' card. Update this when adding new rounds.  
+  default:
+    text: This is a new round of unlabelled data. For info on previous rounds, see the Pod.Cast data wiki. 
+    hydrophone_id: default
+  round1:
+    text: These are unlabelled master tapes from the WHOI marine mammal sound database (recordings from Seattle, California, Vancouver, Antarctica).
+    hydrophone_id: whoi
+  round2:
+    text: You are listening to recordings from Orcasound lab on July 5th, 2019. This was one of the early 'sightings' from 2019, and has a few particularly call rich sections.
+    hydrophone_id: orcasound_lab
+  round3:
+    text: You are listening to recordings from Orcasound lab on September 27th, 2017. This was one of the first few high-quality SRKWs sightings on Raspberry Pi-based Orcasound hydrophone nodes!
+    hydrophone_id: orcasound_lab
+  round4:
+    text: You are listening to recordings from Port Townsend on November 14th, 2019. This contains calls in challenging signal-to-noise-ratio conditions with 'splashing' water noise (different from Orcasound lab acoustic conditions).
+    hydrophone_id: port_townsend
+  round5:
+    text: You are listening to recordings from Orcasound lab on July 25th, 2020. This predominantly contains a variety of boat/ship noises whose tonal nature can cause a high false positive rate. 
+    hydrophone_id: orcasound_lab
+  round6:
+    text: You are listening to recordings from Orcasound lab on September 1st, 2020. J pod went north to Open Bay, then turned back south with tug and other ships/boats providing variety of noise levels. 
+    hydrophone_id: orcasound_lab
+
+# Used to display the URL on the 'Now Playing' card by looking up hydrophone_id.
+# update if adding some new data sources 
+hydrophone_info:  
+  default:
+    display_name: Pod.Cast data wiki
+    url: https://github.com/orcasound/orcadata/wiki/Pod.Cast-data-archive 
+  whoi:
+    display_name: WHOI database master tapes
+    url: https://cis.whoi.edu/science/B/whalesounds/masterFiles.cfm?MY=-1&SP=BE7A
+  orcasound_lab:
+    display_name: Orcasound Lab Hydrophone
+    url: https://live.orcasound.net/orcasound-lab
+  port_townsend:
+    display_name: Port Townsend Hydrophone
+    url: https://live.orcasound.net/port-townsend
+  bush_point:
+    display_name: Bush Point Hydrophone
+    url: https://live.orcasound.net/bush-point

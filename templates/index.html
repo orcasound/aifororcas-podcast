@@ -31,11 +31,10 @@
         <!-- <div class="creation_stage_container"></div> -->
     </div> 
     <div class="container">
-      <div class="row" style="margin-top: 4%">
-        <div class="col l3 s12">
-          <div class="play_bar"></div>
-        </div>
-        <div class="col l3 offset-l1 s12">
+
+      <div class="row" style="margin: 2%">
+
+        <div class="col s12" style="padding: 1%">
           <div class="bootstrap-iso">
             <div class="progress">
               <!-- This is a bit hacky, a bit hestitant to dive into the full CSS :) -->
@@ -43,10 +42,21 @@
             </div>
           </div>
         </div>
-        <div class="col l4 offset-l1 s12">
+
+      </div>
+
+      <div class="row" style="margin: 2%">
+
+        <div class="col l3 s12" style="padding: 1%">
+          <div class="play_bar"></div>
+        </div>
+
+        <div class="col l8 offset-l1 s12" style="padding: 1%">
           <div class="submit_container"></div>
         </div>
+
       </div>
+
     </div>
     <script>
         var fetchUrl = '/fetch/session';
@@ -71,10 +81,11 @@
                 <div class="card blue-grey darken-1">
                   <div class="card-content white-text">
                     <span class="card-title">Now Playing:</span>
-                    <p>You are listening to recordings from the OrcasoundLab hydrophone node on September 27th, 2017. This was one of the first few high-quality SRKWs sightings on Raspberry Pi-based Orcasound hydrophone nodes!</p>
+                    <!-- <p>You are listening to recordings from the OrcasoundLab hydrophone node on September 27th, 2017. This was one of the first few high-quality SRKWs sightings on Raspberry Pi-based Orcasound hydrophone nodes!</p> -->
+                    <p>{{description}}</p>
                   </div>
                   <div class="card-action">
-                    <a href="https://www.orcasound.net/portfolio/orcasound-lab-hydrophone" target="_blank">Orcasound Lab Hydrophone</a>
+                    <a href={{url}} target="_blank">{{url_display}}</a>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@ from flask import render_template
 # from flask_httpauth import HTTPBasicAuth
 # auth = HTTPBasicAuth()
 from azure.storage.blob import BlockBlobService
+from pathlib import Path
 import yaml
 import json
 import tempfile, random
@@ -20,6 +21,10 @@ def dict_to_str(d):
     """Pretty print contents of a dict, with fixed width as [KEY] : [VALUE]"""
     return "\n".join(["{0: <25}: {1}".format(k,v) for k,v in d.items()])
 
+def ends_with_json(s):
+    if s.endswith('.json'): return True
+    return False
+
 class YAMLConfig:
     def __init__(self, yaml_file):
         with open(yaml_file, 'r') as f: yaml_dict = yaml.load(f, Loader=yaml.BaseLoader)
@@ -29,9 +34,55 @@ class YAMLConfig:
     def __repr__(self):
         return dict_to_str(self.__dict__)
 
-def ends_with_json(s):
-    if s.endswith('.json'): return True
-    return False
+class RoundInfoConfig:
+    def __init__(self, creds):
+        """
+        Loads info about the current round to populate the 'Now Playing' card. This is 
+        specified as a YAML file on blob storage for easy edits/updates without needing to 
+        redeploy the backend app.
+
+        current_round: 
+        round_info:
+            round1:
+                text:
+                hydrophone_id: 
+            default: ...
+        hydrophone_info:
+            orcasound_lab:
+                display_name:
+                url:
+            default: ...
+        """
+        container = Path(creds.roundinfoconfig).parent 
+        file_name = Path(creds.roundinfoconfig).name 
+        try:
+            # download YAML file from blob storage
+            block_blob_service = BlockBlobService(account_name=creds.blobaccount,
+                                                account_key=creds.blobaccountkey)
+            text_data = block_blob_service.get_blob_to_text(container, file_name).content
+            self.rounds_yaml = yaml.load(text_data, Loader=yaml.BaseLoader)  
+            assert all( k in self.rounds_yaml for k in ['current_round', 'round_info', 'hydrophone_info'] )
+            self.current_round = self.rounds_yaml['current_round']
+        except Exception as e:
+            print(e)
+            print(container, file_name)
+            self.current_round = 'round1'
+        self.set_round_info(self.current_round)
+
+    def set_round_info(self, roundid):
+        try:
+            round_info = self.rounds_yaml['round_info'].get(roundid)
+            if round_info is None:  # use a default if round info is not upto date
+                round_info = self.rounds_yaml['round_info'].get('default')
+            hydrophone_info = self.rounds_yaml['hydrophone_info'].get(round_info['hydrophone_id'])
+            self.description = round_info['text']
+            self.url_display = hydrophone_info['display_name']
+            self.url = hydrophone_info['url']
+        except:
+            self.description = "Something is wrong with the rounds info YAML file."
+            self.url_display = ""
+            self.url = ""
+    
 
 # core functions  
 
@@ -43,13 +94,16 @@ def list_blob_sessionids(containerName):
     # e.g. returns [11, 22] for available json files [11.json, 22.json]
     return [ x.name.rsplit(".",1)[0] for x in generator if ends_with_json(x.name) ]
 
-def get_session_json(roundid, sessionid):
-    file_name = "{}.json".format(sessionid)
+def get_session_json(roundid, sessionid, is_complete=False):
     """Retrieves a session JSON for annotation UI"""
-    getcontainer = "{}-{}".format(creds.getcontainer, roundid)
+    file_name = "{}.json".format(sessionid)
+    if not is_complete:
+        container = "{}-{}".format(creds.getcontainer, roundid)
+    else:
+        container = "{}-{}".format(creds.postcontainer, roundid)
     block_blob_service = BlockBlobService(account_name=creds.blobaccount,
                                           account_key=creds.blobaccountkey)
-    json_data = block_blob_service.get_blob_to_text(getcontainer, file_name)
+    json_data = block_blob_service.get_blob_to_text(container, file_name)
     return json_data.content
 
 def get_unannotated_session(roundid):
@@ -103,23 +157,15 @@ def index():
     - GET to Azure blob to retrieve wav file for playback & computing spectrogram 
     - POST to /submit/session : save passed JSON to blob location 
     """
-    return redirect("round4", code=303)
+    return redirect(round_info.current_round, code=303)
 
 @app.route('/<roundid>')
 def index_with_roundid(roundid):
-    # simply dummy as all logic is in the client
-    return render_template('index.html')
-
-@app.route('/fetch/session', methods=['GET'])
-def fetch_new_session():
-    try:
-        # state is maintained on the blob itself
-        # HACK: if concurrent requests are served the same random file, annotation is overwritten  
-        response = get_unannotated_session()
-        return json.dumps(response)
-    except Exception as e:
-        print(e)
-        abort(400)
+    round_info.set_round_info(roundid)
+    return render_template('index.html', 
+                            description=round_info.description,
+                            url_display=round_info.url_display,
+                            url=round_info.url)
 
 @app.route('/fetch/session/<roundid>', methods=['GET'])
 def fetch_new_session_with_roundid(roundid):
@@ -136,9 +182,10 @@ def fetch_new_session_with_roundid(roundid):
 def load_session(roundid, sessionid):
     global backend_state
     try:
-        response = json.loads(get_session_json(roundid, sessionid))
+        is_complete = (backend_state['remaining'] == 0)
+        response = json.loads(get_session_json(roundid, sessionid, is_complete))
         response["backend_state"] = backend_state
-        print("Served round: {}, session: {}".format(roundid, sessionid))
+        print("Served round: {}, session: {}, is_complete: {}".format(roundid, sessionid, is_complete))
         return json.dumps(response)
     except Exception as e:
         print("Error in loading session:",e)
@@ -180,6 +227,7 @@ https://stackoverflow.com/questions/32815451/are-global-variables-thread-safe-in
 
 # create credentials object from YAML file 
 creds = YAMLConfig(CREDS_FILE) # NOTE: the file in the repo contains dummy data 
+round_info = RoundInfoConfig(creds)
 # global variable maintained for the progress bar 
 backend_state = {}
 get_unannotated_session("round4") # just to initialize backend_state  

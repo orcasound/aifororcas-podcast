@@ -19,11 +19,10 @@ TODOS are at this Trello card https://trello.com/c/ZBo4CO9r
         * change skip & refresh button to next 
 * update licence
 * support multiple "Rounds" via the URL e.g. basename/round/?sessionid=X
-
+* load the "Now playing" card from a YAML file on blob without needing backend redeployment 
 
 Backlog: 
 
-- load the "Now playing" text from some default YAML file 
 - control default / redirect also from same YAML file 
 - loading spinner https://codepen.io/yic666kr/pen/mxmvbV?__cf_chl_jschl_tk__=3555085104393da3384101d04359a2807f88a01f-1591725010-0-AeSCVSgStNRhdDgsCL2Xjhj4D2bZ_zpe5rqyoWA_HLj80q26yLLjz2bYe1vBWmyn0XS6iHsgy5voFUx84HG3SBqABjTgoLAseHrxh3BBKmbgaZs9zAISu5FqBo8ZF3pQZx-CWfc8ORF7Fnxb2qx4sDti6AN1BxkwjFYKeM3QicfRs18ji7GhzJCRaX9OAW3__1Cc_eFUdU1Ol5h4w5qn3rIfGEH6Q6c9u9lFvL26X9AyI9BwlVjE7JL8RI1qKNtJYWByF28IkMEhWujbWnigG5tApHqeyZJBju84Xh2Uxh9xLhN9qjrMlrV5_BVDi00ZxR8o-qYfd-JvvVnyiyNlvLSNGJqIlDqQABWCcIlgETAl 
 

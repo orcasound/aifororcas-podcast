@@ -202,6 +202,14 @@ WorkflowBtns.prototype = {
             $(my).trigger('refresh-session');
         });
 
+        this.clearBtn = $('<button>', {
+            text: 'CLEAR',
+            class: 'exit btn',
+        });
+        this.clearBtn.click(function () {
+            $(my).trigger('clear-annotations');
+        });
+
         this.exitBtn = $('<button>', {
             text: 'Exit Now',
             class: 'exit btn',
@@ -217,8 +225,8 @@ WorkflowBtns.prototype = {
         if (this.showNextBtn) {
             $('.submit_container').append(this.nextBtn);
         }
-        // $('.submit_container').append(this.nextBtn);
         $('.submit_container').append(this.refreshBtn);
+        $('.submit_container').append(this.clearBtn);
         if (this.showExitBtn) {
             $('.submit_container').append(this.exitBtn);
         }
