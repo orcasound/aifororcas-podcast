@@ -43,6 +43,7 @@ function Annotator() {
     this.wavesurfer.init({
         container: '.audio_visual',
         responsive: true,
+        scrollParent: true,
         waveColor: '#FF00FF',
         progressColor: '#FF00FF',
         cursorColor: '#FFFFFF',
@@ -56,7 +57,8 @@ function Annotator() {
     var labels = Object.create(WaveSurfer.Labels);
     labels.init({
         wavesurfer: this.wavesurfer,
-        container: '.labels'
+        container: '.labels', 
+        maxRows: 3
     });
 
     // Create the play button and time that appear below the wavesurfer
@@ -116,6 +118,7 @@ Annotator.prototype = {
     addWorkflowBtnEvents: function() {
         $(this.workflowBtns).on('submit-annotations', this.submitAnnotations.bind(this));
         $(this.workflowBtns).on('refresh-session', this.fetchAndLoadSession.bind(this));
+        $(this.workflowBtns).on('clear-annotations', this.annotatortool.clear.bind(this));
     },
 
     addEvents: function() {
@@ -237,16 +240,7 @@ Annotator.prototype = {
             }
             this.sendingResponse = true;
 
-            // Get data about the annotations the user has created
-            // var content = {
-            //     task_start_time: this.taskStartTime,
-            //     task_end_time: new Date().getTime(),
-            //     visualization: this.wavesurfer.params.visualization,
-            //     annotations: this.annotatortool.getAnnotations(),
-            //     deleted_annotations: this.annotatortool.getDeletedAnnotations(),
-            //     // List of actions the user took to play and pause the audio
-            //     play_events: this.playBar.getEvents(),
-            // };
+            // Get data about all active annotations 
             var content = {
                 uri: this.currentTask.uri,
                 absolute_time: this.currentTask.absolute_time,

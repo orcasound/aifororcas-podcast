@@ -901,28 +901,6 @@ AnnotationReveal.prototype = {
 
     },
 
-    // Extract the important information from a region object
-    getAnnotationData: function(region) {
-        var regionData = {
-            'id': region.id,
-            'start': region.start,
-            'end': region.end
-        };
-        return regionData;
-    },
-
-    // Return an array of all the annotations the user has made for this clip
-    getAnnotations: function() {
-        var annotationData = [];
-        if (this.wavesurfer.regions) {
-            for (var region_id in this.wavesurfer.regions.list) {
-                var region = this.wavesurfer.regions.list[region_id];
-                annotationData.push(this.getAnnotationData(region));
-            }
-        }
-        return annotationData;
-    },
-
     getPodCastAnnotationData: function(region) {
         var regionData = {
             'start_s': region.start,
@@ -939,16 +917,6 @@ AnnotationReveal.prototype = {
                 var region = this.wavesurfer.regions.list[region_id];
                 annotationData.push(this.getPodCastAnnotationData(region));
             }
-        }
-        return annotationData;
-    },
-
-    // Return an array of all the annotations the user has created and then deleted for this clip
-    getDeletedAnnotations: function() {
-        var annotationData = [];
-        var length = this.deletedAnnotations.length;
-        for (var i = 0; i < length; ++i) {
-            annotationData.push(this.getAnnotationData(this.deletedAnnotations[i]));
         }
         return annotationData;
     },
@@ -1021,6 +989,17 @@ AnnotationReveal.prototype = {
         }
     },
 
+    // Reset the field values (except for hint related fields)
+    clear: function() {
+        this.currentStage = 0;
+        this.currentRegion = null;
+        this.wavesurfer.clearRegions();
+        this.events = [];
+        this.deletedAnnotations = [];
+        this.finalAnnotations  = [];
+        this.candidateAnnotations = [];
+    },
+
     // DONT UNDERSTAND
     // Switch stages and the current region
     updateStage: function(newStage, region) {
@@ -1070,32 +1049,22 @@ AnnotationReveal.prototype = {
     // TODO Need prettier hints?
     // Alert users of hints about how to use the interface
     hint: function() {
-        if (this.wavesurfer.regions && Object.keys(this.wavesurfer.regions.list).length === 1) {
-            if (this.currentStage === 1 && !this.shownSelectHint) {
-                // If the user deselects a region for the first time and have not seen this hint,
-                // alert them on how to select and deselect a region
-                Message.notifyHint('Double click on a segment to select or deselect it.');
-                this.shownSelectHint = true;
-            }
-            if (this.currentStage === 3 && !this.shownTagHint) {
-                // When the user makes a region for the first time, if they have not seen this hint,
-                // alert them on how to annotate a region
-                Message.notifyHint('Select a tag to annotate the segment.');
-                this.shownTagHint = true;
-            }
-        }
+        // if (this.wavesurfer.regions && Object.keys(this.wavesurfer.regions.list).length === 1) {
+        //     if (this.currentStage === 1 && !this.shownSelectHint) {
+        //         // If the user deselects a region for the first time and have not seen this hint,
+        //         // alert them on how to select and deselect a region
+        //         Message.notifyHint('Double click on a segment to select or deselect it.');
+        //         this.shownSelectHint = true;
+        //     }
+        //     if (this.currentStage === 3 && !this.shownTagHint) {
+        //         // When the user makes a region for the first time, if they have not seen this hint,
+        //         // alert them on how to annotate a region
+        //         Message.notifyHint('Select a tag to annotate the segment.');
+        //         this.shownTagHint = true;
+        //     }
+        // }
     },
 
-    // Reset the field values (except for hint related fields)
-    clear: function() {
-        this.currentStage = 0;
-        this.currentRegion = null;
-        this.wavesurfer.clearRegions();
-        this.events = [];
-        this.deletedAnnotations = [];
-        this.finalAnnotations  = [];
-        this.candidateAnnotations = [];
-    },
 
     // Reset field values and update the proximity tags, annotation tages and annotation solutions
     reset: function() {
