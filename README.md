@@ -2,9 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/orcasound/orcalabel-podcast/blob/master/LICENSE)
 
->Developed by Prakruti Gogia, Akash Mahajan and Nithya Govindarajan during Microsoft AI4Earth & OneWeek hackathons. *(this is volunteer-driven & is not an official product)* 
+>Developed by Prakruti Gogia, Akash Mahajan and Nithya Govindarajan during Microsoft AI4Earth & OneWeek hackathons. *(this is volunteer-driven & is not an official product)*
 
-## Overview 
+For a general introduction to the Pod.Cast project, initiated in 2019, and its relationship to other AI for Orcas efforts, please read [the Pod.Cast project general overview at ai4orcas.net](https://ai4orcas.net/portfolio/pod-cast-annotation-system/).
+
+## Techinical Overview 
 
 `podcast_server.py` is a prototype flask-based web-app to label unlabelled bioacoustic recordings, while viewing predictions from a model. This is useful to setup some quick-and-dirty labelling sessions that don't need any advanced features such as automated model inference, user access roles, interfacing with other backends, gamification etc.  
 
