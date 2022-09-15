@@ -27,7 +27,7 @@ This tool has been used in an active learning style to create & release new trai
     - Data to use for labelling/training is prioritized as follows:
         - Candidates are selected for labelling using predictions from an ML model, using a mid-low threshold (tuned for high recall). This helps discard data & prioritize labelling effort. 
 - Each round generates new labelled data that improves models trained on this data, making them more robust to varied acoustic conditions at different hydrophone nodes. 
-- Held-out test sets have also created in a similar fashion as accuracy and robustness benchmarks. 
+- Held-out test sets have also been created in a similar fashion as accuracy and robustness benchmarks. 
 
 <img src="doc/podcast-activelearning-flowchart.png" alt="Flowchart of feedback loop between model & human listeners" width="70%">
 
@@ -53,7 +53,7 @@ JSON file contains `backend_state` for the progress bar, and `uri` that points t
 
 > POST /submit/session/roundid/sessionid
 
-Writes a JSON to the `postcontainer` blob. (For an example, see [example-submit.json](doc/example-submit.json), it has the same schema).
+Writes a JSON to the `postcontainer` blob. (For an example, see [example-submit.json](doc/example-submit.json), which has the same schema).
 Also updates internal global variable `backend_state` that contains info for the progress bar.
 
 **Client logic:**
@@ -119,7 +119,7 @@ az webapp config set -g mldev -n aifororcas-podcast --startup-file "gunicorn --b
 
 ## References 
 
-This code uses a fork of [audio-annotator](https://github.com/CrowdCurio/audio-annotator) for the frontend code. audio-annotator uses [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js) for rendering/playing audio. Please refer to respective references for more info on the core functions/classes used in this repo.
+This code uses a fork of [audio-annotator](https://github.com/CrowdCurio/audio-annotator) for the frontend code. audio-annotator uses [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js) for rendering and playing audio. Please refer to the respective references for more info on the core functions/classes used in this repo.
 *(Note: the wavesurfer.js version used here is older than the current docs).*
 
 Icons used in readme flowcharts were made by [Prosymbols](https://www.flaticon.com/authors/prosymbols) from [www.flaticon.com](http://www.flaticon.com/). 
