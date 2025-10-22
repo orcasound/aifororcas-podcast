@@ -84,7 +84,7 @@ Primary logic is defined in [main.js](static/js/src/main.js).
 
 This assumes you have already created an Azure Storage account & know how to view & access it using [Azure Storage Explorer](https://azure.microsoft.com/en-us/features/storage-explorer/). 
 
-1. Enable a [CORS rule](https://www.dougv.com/2016/08/serving-static-files-azure-storage-cors-rules/) to the account. In short, setting this allows a browser client to directly make a request to the blob storage to retrieve a *.wav file. 
+1. Enable a [CORS rule](https://learn.microsoft.com/en-us/rest/api/storageservices/cross-origin-resource-sharing--cors--support-for-the-azure-storage-services) to the account. In short, setting this allows a browser client to directly make a request to the blob storage to retrieve a *.wav file. 
 
 <img src="doc/az-blob-configure-cors.png" alt="Screenshot of Azure Storage explorer showing CORS permissions" width="35%">
 
