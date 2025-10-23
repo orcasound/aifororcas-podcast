@@ -75,7 +75,7 @@ Primary logic is defined in [main.js](static/js/src/main.js).
 2. Set the environment variable `FLASK_APP=podcast_server.py` and `FLASK_ENV=development`. If you haven't made your own CREDS file yet, see #3. Once that's done from this directory start the server with `python -m flask run`, and browse to the link in the terminal (e.g. `http://127.0.0.1:5000/`) in your browser (Edge and Chrome are tested). 
 
 3. The `CREDS.yaml` specifies how the backend authenticates with blob storage & the specific container names to use. The provided file is a template and should be replaced: 
-    * If you would like to test with an ongoing Pod.Cast round, ask for the credentials on the [Orcasound Zulip](https://orcasound.zulipchat.com/)
+    * If you would like to test with an ongoing Pod.Cast round, ask for the credentials on the [Orcasound Zulip](https://orcasound.zulipchat.com/#narrow/channel/457425-ai4orcas-orcahello)
     * If you are using your own blob account, see section [Using your own blob storage](#using-your-own-blob-storage)
 
 > Note that when you run this locally, you will still be connecting & writing to the actual blob storage specified in `CREDS.yaml` so be careful. 
